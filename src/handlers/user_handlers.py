@@ -35,7 +35,7 @@ This bot helps you search and generate credentials from your ULP inventory.
 
 **What you can do:**
 • 🔍 Search for domains in your inventory
-• 📋 Generate credentials in multiple formats
+• ���� Generate credentials in multiple formats
 • 📊 View statistics and history
 • ⚙️ Manage your settings
 
@@ -71,7 +71,6 @@ Use /help to see all available commands.
 /profile - View your profile
 /balance - Check your credit balance
 /search - Search for domains
-/domain - Search domain statistics
 /inventory - View available inventories
 /generate - Generate credentials
 /history - View generation history
@@ -163,11 +162,6 @@ Contact admin to purchase credits.
 
 **Generation Stats:**
 • Total Generations: {stats['total_generations']}
-
-**Inventory Stats:**
-• Total Files: {search_stats.get('total_files', 'N/A')}
-• Total Records: {search_stats.get('total_records', 'N/A')}
-• Total Domains: {search_stats.get('total_domains', 'N/A')}
 
 **Daily Usage:**
 • Searches: {stats['searches_today']}/{stats['searches_limit']}
