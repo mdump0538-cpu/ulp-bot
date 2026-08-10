@@ -14,29 +14,17 @@ class CredentialGenerator:
                 output_format: str = 'WITH_URL', random_selection: bool = True) -> List[str]:
         """
         Generate credentials from records
-        
-        Args:
-            records: List of ULPRecord objects
-            quantity: Number of credentials to generate
-            output_format: Format of output (WITH_URL, WITHOUT_URL, URL_ONLY, LOGIN_ONLY)
-            random_selection: Whether to randomly select or take first N
-        
-        Returns:
-            List of formatted credential strings
         """
         if not records:
             return []
 
-        # Ensure quantity doesn't exceed available records
         quantity = min(quantity, len(records))
 
-        # Select records
         if random_selection:
             selected = random.sample(records, quantity)
         else:
             selected = records[:quantity]
 
-        # Format records
         formatted = []
         for record in selected:
             formatted_record = ULPParser.format_record(record, output_format)
@@ -54,7 +42,6 @@ class CredentialGenerator:
 
         quantity = min(quantity, len(records))
 
-        # Format and remove duplicates
         seen = set()
         result = []
 
@@ -93,12 +80,3 @@ class CredentialGenerator:
             preview += "No credentials to preview"
 
         return preview
-
-    @staticmethod
-    def generate_batch(records: List[ULPRecord], quantities: dict, 
-                      output_format: str = 'WITH_URL') -> dict:
-        """Generate multiple batches"""
-        results = {}
-        for name, qty in quantities.items():
-            results[name] = CredentialGenerator.generate(records, qty, output_format)
-        return results
