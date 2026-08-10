@@ -26,6 +26,12 @@ from .handlers.inline_handlers import InlineHandlers
 
 logger = logging.getLogger(__name__)
 
+# Conversation states
+SEARCH_DOMAIN = 1
+GEN_INVENTORY = 2
+GEN_QUANTITY = 3
+GEN_FORMAT = 4
+
 
 class ULPBot:
     """Main ULP Telegram Bot"""
@@ -42,6 +48,19 @@ class ULPBot:
         self.export_manager = ExportManager(self.config.get('export_path', 'exports/'))
 
         self.user_manager = UserManager(self.db, self.config)
+
+        # Setup admin users
+        for admin_id in self.config.get('admin_ids', []):
+            user = self.db.get_user(admin_id)
+            if not user:
+                self.db.create_user(admin_id, is_admin=True)
+            else:
+                # Make sure they're marked as admin
+                conn = self.db.get_connection()
+                cursor = conn.cursor()
+                cursor.execute('UPDATE users SET is_admin = 1 WHERE user_id = ?', (admin_id,))
+                conn.commit()
+                conn.close()
 
         # Initialize handlers
         self.user_handlers = UserHandlers(self)
@@ -76,40 +95,35 @@ class ULPBot:
         self.app.add_handler(CommandHandler("unbanuser", self.admin_handlers.unban_user))
         self.app.add_handler(CommandHandler("reload", self.admin_handlers.reload_inventory))
 
-        # Callback handlers
-        self.app.add_handler(CallbackQueryHandler(self.inline_handlers.button_callback))
-
-        # Message handlers for conversation
+        # Conversation handlers for search
         search_conv_handler = ConversationHandler(
-            entry_points=[
-                CallbackQueryHandler(self.inline_handlers.start_search, pattern="^search$"),
+            entry_points=[\n                CallbackQueryHandler(self.inline_handlers.start_search, pattern="^search$\"),
                 CommandHandler("search", self.inline_handlers.start_search)
             ],
-            states={
-                1: [MessageHandler(filters.TEXT & ~filters.COMMAND, self.inline_handlers.search_domain_input)]
+            states={\n                SEARCH_DOMAIN: [MessageHandler(filters.TEXT & ~filters.COMMAND, self.inline_handlers.search_domain_input)]
             },
-            fallbacks=[]
-        )
+            fallbacks=[]\n        )
 
+        # Conversation handlers for generation
         gen_conv_handler = ConversationHandler(
-            entry_points=[
-                CallbackQueryHandler(self.inline_handlers.start_generate, pattern="^gen_")
+            entry_points=[\n                CallbackQueryHandler(self.inline_handlers.start_generate, pattern=\"^gen_\")
             ],
-            states={
-                2: [CallbackQueryHandler(self.inline_handlers.select_inventory, pattern="^gen_inv_")],
-                3: [CallbackQueryHandler(self.inline_handlers.select_quantity, pattern="^qty_")],
-                4: [CallbackQueryHandler(self.inline_handlers.confirm_generation, pattern="^fmt_")]
+            states={\n                GEN_INVENTORY: [CallbackQueryHandler(self.inline_handlers.select_inventory, pattern=\"^gen_inv_\")],
+                GEN_QUANTITY: [CallbackQueryHandler(self.inline_handlers.select_quantity, pattern=\"^qty_\")],
+                GEN_FORMAT: [CallbackQueryHandler(self.inline_handlers.confirm_generation, pattern=\"^fmt_\")]
             },
-            fallbacks=[]
-        )
+            fallbacks=[]\n        )
 
         self.app.add_handler(search_conv_handler)
         self.app.add_handler(gen_conv_handler)
 
+        # Callback handler for buttons (general)
+        self.app.add_handler(CallbackQueryHandler(self.inline_handlers.button_callback))
+
         logger.info("Telegram application initialized")
 
     async def run(self):
-        """Run the bot (blocking)"""
+        \"\"\"Run the bot (blocking)\"\"\"
         try:
             await self.initialize_app()
             async with self.app:
@@ -130,7 +144,7 @@ class ULPBot:
             logger.info("Bot stopped")
 
     def setup_logging(self, log_path: str = "logs/"):
-        """Setup logging"""
+        \"\"\"Setup logging\"\"\"
         Path(log_path).mkdir(parents=True, exist_ok=True)
 
         logging.basicConfig(
@@ -146,7 +160,7 @@ class ULPBot:
 
 
 async def main():
-    """Main entry point"""
+    \"\"\"Main entry point\"\"\"
     bot = ULPBot("config.json")
     bot.setup_logging("logs/")
 
